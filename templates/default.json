@@ -1,0 +1,19 @@
+{
+    "author":"Your Name",
+    "bom_dir":"bom",
+    "company":"Your Company",
+    "date_create":"",
+    "date_update":"",
+    "description":"",
+    "email":"you@email.com",
+    "gerbers_dir":"gerbers",
+    "lib_dir":"/home/wicker/wickerlib/libraries",
+    "license":"CERN Open Hardware License v1.2",
+    "projname":"",
+    "template_dir":"/home/wicker/proj/KiFisher/templates",
+    "template_kicad":"default-2layer",
+    "template_latex":"default.tex",
+    "title":"",
+    "version":"1.0",
+    "website":"http://yourcompany.com"
+}
