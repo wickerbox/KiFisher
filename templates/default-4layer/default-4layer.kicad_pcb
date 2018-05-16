@@ -1,11 +1,11 @@
-(kicad_pcb (version 4) (host pcbnew 4.0.4+e1-6308~48~ubuntu14.04.1-stable)
+(kicad_pcb (version 4) (host pcbnew 4.0.7-e2-6376~58~ubuntu16.04.1)
 
   (general
     (links 0)
     (no_connects 0)
-    (area 104.572999 74.854999 178.510001 123.265001)
+    (area 0 0 0 0)
     (thickness 1.6)
-    (drawings 17)
+    (drawings 1)
     (tracks 0)
     (zones 0)
     (modules 0)
@@ -107,6 +107,10 @@
     (via_drill 0.3302)
     (uvia_dia 0.6858)
     (uvia_drill 0.3302)
+  )
+
+  (gr_text "FABRICATION NOTES\n\n1. THIS IS A 4 LAYER BOARD. \n2. EXTERNAL LAYERS SHALL HAVE 1 OZ COPPER.\n3. INTERNAL LAYERS SHALL HAVE 0.5 OZ COPPER.\n4. MATERIAL: FR408 AND 0.062 INCH +/- 10% THICK.\n5. BOARDS SHALL BE ROHS COMPLIANT. \n6. MANUFACTURE IN ACCORDANCE WITH IPC-6012 CLASS 2\n7. MASK: BOTH SIDES OF THE BOARD SHALL HAVE \n   SOLDER MASK (ANY COLOR) OVER BARE COPPER. \n8. SILK: BOTH SIDES OF THE BOARD SHALL HAVE \n   WHITE SILKSCREEN. DO NOT PLACE SILK OVER BARE COPPER.\n9. FINISH: ENIG.\n10. MINIMUM TRACE WIDTH - 0.006 INCH.\n    MINIMUM SPACE - 0.006 INCH.\n    MINIMUM HOLE DIA - 0.013 INCH. \n11. MAX HOLE PLACEMENT TOLERANCE OF +/- 0.003 INCH.\n12. MAX HOLE DIAMETER TOLERANCE OF +/- 0.003 INCH AFTER PLATING." (at 114.9096 84.5312) (layer Dwgs.User)
+    (effects (font (size 2.54 2.54) (thickness 0.254)) (justify left))
   )
 
 )
