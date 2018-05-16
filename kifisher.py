@@ -1,23 +1,23 @@
 #!/usr/bin/python
 #
-# Kingfisher
+# KiFisher
 #
 # created by Jenner Hanni at Wickerbox Electronics
 # http://wickerbox.net/
 #
 # This program automates some of the KiCad process, including:
-# - creating a fabrication drawing 
+# - creating a fabrication drawing
 # - generating stencil and manufacturing files
 # - creating bills of material
 # - packaging everything so it's ready to upload for ordering
 # - building a beautiful documentation PDF
 # - building a nice README with Markdown BOM table for Github
-# 
+#
 # It depends on some assumptions of the Wickerlib environment,
-# so pay attention to the 'data' object throughout. 
+# so pay attention to the 'data' object throughout.
 #
 # For questions, please email me at jenner@wickerbox.net.
-# 
+#
 # Released under the GPLv3.
 #
 
@@ -98,9 +98,9 @@ class BOMline():
 # - reads in data from the appropriate proj.json file
 # - updates the version number
 # - writes the updated data back to the proj.json file
-# 
+#
 # returns nothing
-# 
+#
 ###########################################################
 
 def update_version(name,version):
@@ -116,7 +116,7 @@ def update_version(name,version):
 
   with open(filename, 'w') as jsonfile:
     json.dump(data, jsonfile, indent=4, sort_keys=True, separators=(',', ':'))
-  
+
   # but we need the 'v' prefix for all other operations locally so add it
   data['version'] = 'v'+version
 
@@ -134,10 +134,10 @@ def update_version(name,version):
 # - project name
 # - json template name
 # - version number (no preceding 'v')
-# 
+#
 # what it does:
 # - creates a subfolder called projname
-#   if one exists, it prompts to overwrite. 
+#   if one exists, it prompts to overwrite.
 # - creates the json file by copying existing template
 # - prompts for additional information
 # - creates a data dict to hold all that project information
@@ -145,16 +145,16 @@ def update_version(name,version):
 # - create README.md
 # - copy over KiCad template files and rename to projname,
 #   including using the proj.json info for page settings
-# - replace the 'page settings' sections of sch and 
+# - replace the 'page settings' sections of sch and
 #   .kicad_pcb files
-# 
+#
 # returns nothing
-# 
+#
 ###########################################################
 
 def create_new_project(projname,which_template,version):
 
-  if not os.path.exists(projname): 
+  if not os.path.exists(projname):
     os.makedirs(projname)
 
   # copy in the appropriate json file
@@ -168,7 +168,7 @@ def create_new_project(projname,which_template,version):
   call(['cp',which_template,projname+'/proj.json'])
 
   # if it exists, load the proj.json file and make updates if necessary
-  
+
   with open(projname+'/proj.json','r') as jsonfile:
     data = json.load(jsonfile)
 
@@ -221,14 +221,14 @@ def create_new_project(projname,which_template,version):
 #
 # inputs:
 # - data object
-# 
+#
 # what it does:
 # - reads in the existing file
 # - applies the current data to the entire title block
 # - writes the file back out
 #
 # returns nothing
-# 
+#
 ###########################################################
 
 def update_kicad_pcb_title_block(data):
@@ -244,7 +244,7 @@ def update_kicad_pcb_title_block(data):
       if title_flag is True:
         if '  )' in line:
           title_flag = False
-          
+
           f_temp.append('  (title_block\n')
           f_temp.append('    (title "'+data['title']+'")\n')
           f_temp.append('    (date "'+data['date_create']+'")\n')
@@ -254,7 +254,7 @@ def update_kicad_pcb_title_block(data):
           f_temp.append('    (comment 2 "'+data['website']+'")\n')
           f_temp.append('    (comment 3 "'+data['company']+'")\n')
           f_temp.append('  )\n')
-          
+
       else:
         f_temp.append(line)
 
@@ -268,14 +268,14 @@ def update_kicad_pcb_title_block(data):
 #
 # inputs:
 # - data object
-# 
+#
 # what it does:
 # - reads in the existing file
 # - applies the current data to the entire title block
 # - writes the file back out
 #
 # returns nothing
-# 
+#
 ###########################################################
 
 def update_sch_title_block(data):
@@ -292,7 +292,7 @@ def update_sch_title_block(data):
       if title_flag is True:
         if '$EndDescr' in line:
           title_flag = False
-          
+
           f_temp.append('Title "'+data['title']+'"\n')
           f_temp.append('Date "'+data['date_create']+'"\n')
           f_temp.append('Rev "'+data['version']+'"\n')
@@ -316,12 +316,12 @@ def update_sch_title_block(data):
 # inputs:
 # - relative file path
 # - data object
-# 
+#
 # what it does:
 # - takes the values in data and writes to file path
 #
 # returns nothing
-# 
+#
 ###########################################################
 
 def create_readme(filename,data):
@@ -354,14 +354,14 @@ def create_readme(filename,data):
 #
 # inputs:
 # - filename that may or may not end in .kicad_pcb
-# 
+#
 # what it does:
 # - helper function to clean .kicad_pcb suffix
-# 
+#
 # outputs:
-# - tuple ('projname','filename') where 
+# - tuple ('projname','filename') where
 #   filename = projname.kicad_pcb
-# 
+#
 ###########################################################
 
 def sanitize_input_kicad_filename(filename):
@@ -388,10 +388,10 @@ def sanitize_input_kicad_filename(filename):
 #              plot_gerbers_and_drills
 #
 #  inputs:
-#  - root name of the project, where the 
+#  - root name of the project, where the
 #    root of 'project.kicad_pcb' would be 'project'
 #  - name of a subdirectory to put output files
-# 
+#
 #  what it does:
 #  - clean the output dir by removing all files
 #  - set plot options
@@ -407,7 +407,7 @@ def sanitize_input_kicad_filename(filename):
 
 def plot_gerbers_and_drills(projname, plot_dir):
 
-  # make the output dir if it doesn't already exist  
+  # make the output dir if it doesn't already exist
   if not os.path.exists(plot_dir):
     os.makedirs(plot_dir)
 
@@ -442,10 +442,10 @@ def plot_gerbers_and_drills(projname, plot_dir):
   popt.SetSubtractMaskFromSilk(True)
 
   # this option in the reference example said 'must be set true'
-  # but all the PDFs were coming out empty; is this because 
-  # there was no aux origin applied in my .kicad_pcb file? 
-  # in any case, now it works when set to false. 
-  popt.SetUseAuxOrigin(False)  
+  # but all the PDFs were coming out empty; is this because
+  # there was no aux origin applied in my .kicad_pcb file?
+  # in any case, now it works when set to false.
+  popt.SetUseAuxOrigin(False)
 
   # note: the middle value in plot_plan is an integer layer number:
   # 0 F.Cu
@@ -498,9 +498,9 @@ def plot_gerbers_and_drills(projname, plot_dir):
   # 47 F.CrtYd
   # 48 B.Fab
   # 49 F.Fab
-   
+
   plot_plan = [
-      ( "F.Cu", F_Cu, "Copper top" ), 
+      ( "F.Cu", F_Cu, "Copper top" ),
       ( "B.Cu", B_Cu, "Copper bottom" ),
       ( "F.Paste", F_Paste, "Paste top" ),
       ( "B.Paste", B_Paste, "Paste bottom" ),
@@ -556,7 +556,7 @@ def plot_gerbers_and_drills(projname, plot_dir):
   drlwriter.CreateDrillandMapFilesSet( pctl.GetPlotDirName(), genDrl, genMap );
 
   # Create fab notes file
-  
+
 
   # Create the drill statistics report
 
@@ -573,10 +573,10 @@ def plot_gerbers_and_drills(projname, plot_dir):
 
 ##########################################################
 #
-#                get_board_size                     
+#                get_board_size
 #
 # inputs:
-#  - root name of the project 
+#  - root name of the project
 #    root of 'project.kicad_pcb' would be 'project'
 #  - name of a subdirectory to put output files
 #
@@ -587,12 +587,12 @@ def plot_gerbers_and_drills(projname, plot_dir):
 #
 # returns:
 # - a list in format:
-#   [width (inch), height (inch),      # actual board 
+#   [width (inch), height (inch),      # actual board
 #    width (mm), height (mm),          # actual board
 #    width (pixels), height (pixels)]  # preview images
-#   
-# Note: the code in this section is derived from Wayne 
-# and Layne's script to get Gerber file outer dimensions, 
+#
+# Note: the code in this section is derived from Wayne
+# and Layne's script to get Gerber file outer dimensions,
 # which is public domain. > wayneandlayne.com, accessed 2016
 #
 # TODO: handle circle boards!
@@ -602,7 +602,7 @@ def plot_gerbers_and_drills(projname, plot_dir):
 def get_board_size(projname,plot_dir):
 
   fp = os.path.join(plot_dir,projname+'-Edge.Cuts.gko')
-  
+
   xmin = None
   xmax = None
   ymin = None
@@ -658,7 +658,7 @@ def get_board_size(projname,plot_dir):
 #
 # returns:
 # - a string
-#   
+#
 ###########################################################
 
 def get_board_size_string(board_dims):
@@ -675,28 +675,28 @@ def get_board_size_string(board_dims):
 
 ###########################################################
 #
-#            create_assembly_diagrams                      
+#            create_assembly_diagrams
 #
-# note: the assembly diagrams are created from F.Assembly and 
-#       B.Assembly layers. 
+# note: the assembly diagrams are created from F.Assembly and
+#       B.Assembly layers.
 # todo: support using another layer instead
 #
 # inputs:
-#  - root name of the project 
+#  - root name of the project
 #    root of 'project.kicad_pcb' would be 'project'
 #  - name of a subdirectory to put output files
 #  - height of board in pixels
 #  - width of board in pixels
 #
 # what it does:
-# - uses gerbv to export F.Assembly and B.Assembly images  
-# - remove empty layers 
+# - uses gerbv to export F.Assembly and B.Assembly images
+# - remove empty layers
 # - create the output file from non-empty layers,
 #   stitching them together side by side depending
-#   on whether the images are portrait or landscape 
+#   on whether the images are portrait or landscape
 #
 # returns nothing
-#   
+#
 ###########################################################
 
 def create_assembly_diagrams(projname,plotdir,width,height):
@@ -734,7 +734,7 @@ def create_assembly_diagrams(projname,plotdir,width,height):
 
   call(['rm',plotdir+'/'+projname+'-F.Fab.gbr',plotdir+'/'+projname+'-B.Fab.gbr'])
 
-  # create preview.png file from one or both 
+  # create preview.png file from one or both
   f1 = os.path.isfile('assembly-top.png')
   f2 = os.path.isfile('assembly-bottom.png')
 
@@ -759,10 +759,10 @@ def create_assembly_diagrams(projname,plotdir,width,height):
 
 ###########################################################
 #
-#            create_image_previews 
+#            create_image_previews
 #
 # inputs:
-#  - root name of the project 
+#  - root name of the project
 #    root of 'project.kicad_pcb' would be 'project'
 #  - name of a subdirectory to put output files
 #  - height of board in pixels
@@ -771,7 +771,7 @@ def create_assembly_diagrams(projname,plotdir,width,height):
 # what it does:
 # - create GerbV .gvp project file
 # - create the composite top image in GerbV
-# - use ImageMagick to flip the bottom-side images 
+# - use ImageMagick to flip the bottom-side images
 #   because GerbV command line doesn't support mirroring.
 # - create composite bottom image in GerbV
 # - merge the two images depending on whether they're
@@ -782,7 +782,7 @@ def create_assembly_diagrams(projname,plotdir,width,height):
 #
 # inspired by this code for the project-based solution
 # - https://gist.github.com/docprofsky/70b718b434d7d184c59729263d436a3d#file-heliopsis-gvp
-# 
+#
 ###########################################################
 
 def create_image_previews(projname,plotdir,width_pixels,height_pixels):
@@ -817,7 +817,7 @@ def create_image_previews(projname,plotdir,width_pixels,height_pixels):
 
   projfile = 'bottom.gvp'
   cwd = os.getcwd()
-  print cwd 
+  print cwd
 
   with open(plotdir+'/'+projfile,'w') as pf:
     pf.write("(gerbv-file-version! \"2.0A\")\n")
@@ -855,7 +855,7 @@ def create_image_previews(projname,plotdir,width_pixels,height_pixels):
 
 ###########################################################
 #
-#           create_component_list_from_netlist            
+#           create_component_list_from_netlist
 #
 # inputs:
 # - data object
@@ -863,12 +863,12 @@ def create_image_previews(projname,plotdir,width_pixels,height_pixels):
 # what it does:
 # - opens the netlist file
 # - for every line in the netlist, create a component line
-#   there is no handling of duplicate entries; this is a 
+#   there is no handling of duplicate entries; this is a
 #   raw list right from the netlist.
 #
 # returns:
 # - json object of every part on the board listed by refdes
-# 
+#
 ###########################################################
 
 def create_component_list_from_netlist(data):
@@ -881,7 +881,7 @@ def create_component_list_from_netlist(data):
   comp_count = 0
   fields_flag = False
 
-  if not os.path.exists(netfile_name): 
+  if not os.path.exists(netfile_name):
     print "\nERROR! Netfile doesn't exist. Did you export it from the schematic?"
     print "--> Leaving the program without creating bill of materials.\n"
     exit()
@@ -933,9 +933,9 @@ def create_component_list_from_netlist(data):
           net_json.append('      }')
 
   net_json.append('\n]')
-  
+
   net_json_path = data['projname']+'-parts.json'
-      
+
   with open(net_json_path,'w') as parts_json:
     for line in net_json:
       parts_json.write(line+'\n')
@@ -956,7 +956,7 @@ def create_component_list_from_netlist(data):
   for c in components:
     populate_flag = False
     for key, value in c.iteritems():
-      if key == 'populate': 
+      if key == 'populate':
         populate_flag = True
     if populate_flag is False:
       c['populate'] = 'Yes'
@@ -965,9 +965,9 @@ def create_component_list_from_netlist(data):
 
 ###########################################################
 #
-#             create_bill_of_materials 
-# 
-# inputs: 
+#             create_bill_of_materials
+#
+# inputs:
 # - data object
 #
 # what it does:
@@ -975,7 +975,7 @@ def create_component_list_from_netlist(data):
 # - create a components list organized by refdes
 # - figure out which vendors are necessary
 # - create the master BOM object made up of BOM lines
-# - create a master CSV file with all possible info 
+# - create a master CSV file with all possible info
 # - create a CSV file in the Seeed format
 # - create CSV files for each vendor
 # - create one Markdown file with tables
@@ -983,7 +983,7 @@ def create_component_list_from_netlist(data):
 # returns:
 # - the list of components directly from netlist
 #   with no handling of duplicate part types
-# 
+#
 ###########################################################
 
 def create_bill_of_materials(data):
@@ -1024,7 +1024,7 @@ def create_bill_of_materials(data):
   vendors = set(vendors)
 
   # create the master BOM object
-   
+
   bom = []
 
   for c in components:
@@ -1046,7 +1046,7 @@ def create_bill_of_materials(data):
     # if this is not a duplicate entry
     # create a new row for it
 
-    if exists_flag is False: 
+    if exists_flag is False:
       for key, value in c.iteritems():
         bomline.qty = 1
         if key == 'ref':
@@ -1094,7 +1094,7 @@ def create_bill_of_materials(data):
     refs.sort(key=lambda x: x)
     b.refs = ''
     for r in refs:
-      if b.refs: 
+      if b.refs:
         b.refs = b.refs + ' ' + r
       else:
         b.refs = r
@@ -1104,11 +1104,11 @@ def create_bill_of_materials(data):
   #     C3    ~~~~
   #     D1 D2 ~~~~
   #     S1    ~~~~
-  #     
+  #
   bom.sort(key=lambda x: x.refs)
 
   # create master output string including the dynamic fields
-  # this is brute force for now 
+  # this is brute force for now
 
   title_string = 'Ref,Qty1,Qty3,Footprint,Footprint Library,Symbol,Symbol Library,Datasheet'
   title_string += ',MF_Name,MF_PN,S1_Name,S1_PN,Type\n'
@@ -1120,7 +1120,7 @@ def create_bill_of_materials(data):
   with open(outfile,'w') as obom:
     obom.write(title_string)
     for b in bom:
-      
+
       q = b.qty*3
       obom.write(b.refs+','+str(b.qty)+','+str(q)+','+b.footprint+','+b.footprint_lib+','+ \
                  b.symbol+','+b.symbol_lib+','+b.datasheet)
@@ -1134,7 +1134,7 @@ def create_bill_of_materials(data):
   # Create the master readable output
 
   outfile = bom_outfile_readable_csv
-  
+
   with open(outfile,'w') as obom:
     obom.write('Ref,Qty,Qty3,Description,MF,MF_PN,S1,S1_PN,Type\n')
     for b in bom:
@@ -1158,7 +1158,7 @@ def create_bill_of_materials(data):
   # Create the tempo automation output
 
   outfile = bom_outfile_tempo_csv
-  
+
   with open(outfile,'w') as obom:
     obom.write('Refdes,Quantity,Description,Manufacturer,MPN\n')
     for b in bom:
@@ -1177,7 +1177,7 @@ def create_bill_of_materials(data):
   # Create the master Seeed output
 
   outfile = bom_outfile_seeed_csv
-  
+
   with open(outfile,'w') as obom:
     obom.write('Location,MPN/Seeed SKU,Quantity\n')
     for b in bom:
@@ -1215,7 +1215,7 @@ def create_bill_of_materials(data):
       for line in outcsv_list:
         ocsv.write(line+'\n')
 
-    # empty the output csv list to start fresh for the next file 
+    # empty the output csv list to start fresh for the next file
     outcsv_list = []
 
   # write out all the vendors in one readable markdown file
@@ -1242,7 +1242,7 @@ def create_bill_of_materials(data):
   board_dims = get_board_size(data['projname'],data['gerbers_dir'])
   outassy_list.append(get_board_size_string(board_dims)+'\n')
 
-  # write to the readable markdown file that will end up 
+  # write to the readable markdown file that will end up
   # appended in the github repo README.md
   with open(assy_outfile_md,'w') as oassy:
     for line in outassy_list:
@@ -1253,11 +1253,11 @@ def create_bill_of_materials(data):
 
 ###########################################################
 #
-#                   create_mfr_zip_files 
+#                   create_mfr_zip_files
 #
 # inputs:
 # - data object
-# 
+#
 # what it does:
 # - creates generic zip file for boards (gko, xln)
 # - creates zip file for osh stencils (gko, gtp, gbp)
@@ -1298,21 +1298,21 @@ def create_mfr_zip_files(data):
 ###########################################################
 #
 #             create_assembly_files
-# 
-# inputs: 
+#
+# inputs:
 # - data object
 # - unsanitized components list directly from netlist
 #
 # what it does:
 # - removes all existing assembly files in that directory
-# - 
+# -
 #
 # - create the master BOM object made up of BOM lines
-# - create a master CSV file with all possible info 
+# - create a master CSV file with all possible info
 # - create a CSV file in the Seeed format
 # - create CSV files for each vendor
 # - create one Markdown file with tables
-# 
+#
 ###########################################################
 
 def create_assembly_files(data,components):
@@ -1327,7 +1327,7 @@ def create_assembly_files(data,components):
   xyrs_parts_master = []
 
   # create xyrs_parts_master from the position files
-  
+
   for pf in posfiles:
     with open(pf) as p:
       for line in p:
@@ -1363,7 +1363,7 @@ def create_assembly_files(data,components):
         x.value = c['description']
         x.mpn = c['mf_pn']
         x.pop = 'Yes'
-    
+
     if x.thsmt == 'TH':
       x.thsmt = '2'
     if x.thsmt == 'SMT' or x.thsmt == 'SMD':
@@ -1401,7 +1401,7 @@ def create_assembly_files(data,components):
 #
 # inputs:
 # - data object
-# 
+#
 # what it does:
 # - creates README.md if it doesn't already exist
 # - appends BOM to README if there's a commented section
@@ -1491,31 +1491,31 @@ def update_readme(data):
 
 ###########################################################
 #
-#                      create_pdf                      
+#                      create_pdf
 #
-# inputs: 
+# inputs:
 # - data object
 #
 # what it does:
 # - creates a temporary file which will be pandoc input
-# - copies over the README to the temporary file, 
-#   ignoring anything in the title 
+# - copies over the README to the temporary file,
+#   ignoring anything in the title
 # - uses the appropriate LaTeX template
 # - adjusts the width of the png files by input arg
 # - calls pandoc to create the PDF from temporary file
-# - remove the temporary file 
-# 
+# - remove the temporary file
+#
 # returns nothing
 #
 ###########################################################
 
 def create_pdf(data):
 
-  tempfile = 'temporary.md' 
+  tempfile = 'temporary.md'
   src = 'README.md'
   src_list = []
   title_flag = False
- 
+
   with open(src,'r') as s:
     for line in s:
       if 'start title' in line:
@@ -1552,7 +1552,7 @@ def create_pdf(data):
           src_list.append('\n')
         else:
           src_list.append(line)
- 
+
   with open(tempfile,'w') as tfile:
     tfile.write('---\n')
     tfile.write('title: '+data['title']+'\n')
@@ -1573,16 +1573,16 @@ def create_pdf(data):
   latex_template_dir = data['template_dir'][:-9]
 
   # create PDF
-  call(['pandoc','-fmarkdown-implicit_figures','-R','--data-dir='+latex_template_dir,'--template='+data['template_latex'],'-V','geometry:margin=1in',tempfile,'-o',data['projname']+'-v'+data['version']+'.pdf']) 
+  call(['pandoc','-fmarkdown-implicit_figures','-R','--data-dir='+latex_template_dir,'--template='+data['template_latex'],'-V','geometry:margin=1in',tempfile,'-o',data['projname']+'-v'+data['version']+'.pdf'])
 
   # remove input file
   call(['rm',tempfile])
 
 ###########################################################
 #
-#                 create_release_zipfile                      
+#                 create_release_zipfile
 #
-# inputs: 
+# inputs:
 # - data object
 #
 # what it does:
@@ -1590,8 +1590,8 @@ def create_pdf(data):
 #   - seeed .csv bom
 #   - gerbers zip
 #   - stencil zip
-#   - project PDF 
-# 
+#   - project PDF
+#
 # returns nothing
 #
 ###########################################################
@@ -1611,11 +1611,11 @@ def create_release_zipfile(data):
     if os.path.exists(data['projname']+'-v'+data['version']+'-gerbers.zip'):
       release_zip.write(data['projname']+'-v'+data['version']+'-gerbers.zip')
     if os.path.exists(data['projname']+'-v'+data['version']+'-stencil.zip'):
-      release_zip.write(data['projname']+'-v'+data['version']+'-stencil.zip') 
+      release_zip.write(data['projname']+'-v'+data['version']+'-stencil.zip')
     os.chdir('..')
 
   if os.path.exists(data['projname']+'-v'+data['version']+'.pdf'):
-    release_zip.write(data['projname']+'-v'+data['version']+'.pdf') 
+    release_zip.write(data['projname']+'-v'+data['version']+'.pdf')
 
 ###########################################################
 #
@@ -1681,7 +1681,7 @@ if __name__ == '__main__':
         data['date_update'] = now.strftime('%-d %b %Y')
       with open(args.name+'/proj.json','w') as jsonfile:
         json.dump(data, jsonfile, indent=4, sort_keys=True, separators=(',', ':'))
- 
+
     else:
       print "This project is missing a proj.json file. Leaving program."
       exit()
@@ -1697,9 +1697,9 @@ if __name__ == '__main__':
 
       # remove all files in the assembly output dir
       cwd = os.getcwd()
-      if not os.path.exists(data['bom_dir']): 
+      if not os.path.exists(data['bom_dir']):
         os.makedirs(data['bom_dir'])
-      
+
       if args.assy:
         os.chdir(data['bom_dir'])
         filelist = glob.glob('*')
@@ -1713,9 +1713,9 @@ if __name__ == '__main__':
       print get_board_size_string(board_dims)
 
       create_assembly_diagrams(data['projname'],data['gerbers_dir'],board_dims[4], board_dims[5])
-      create_image_previews(data['projname'],data['gerbers_dir'],board_dims[4], board_dims[5]) 
+      create_image_previews(data['projname'],data['gerbers_dir'],board_dims[4], board_dims[5])
       create_mfr_zip_files(data)
-      
+
     if args.bom or args.assy:
       print "Creating the bill of materials, which will update the README."
       components_raw = create_bill_of_materials(data)
@@ -1731,7 +1731,7 @@ if __name__ == '__main__':
       if not os.path.exists(data['projname']+'-bottom.pos'):
         print "Missing bottom .pos file. Unable to create assembly information."
         exit()
-      
+
       # the components_raw list contains each refdes (part) on a separate row
       # it needs to be sanitized for non-populated parts
       # then merged with .pos file values
@@ -1739,9 +1739,9 @@ if __name__ == '__main__':
 
     update_readme(data)
 
-    if args.pdf: 
+    if args.pdf:
       print "Creating or updating the PDF."
-      
+
       # accept user input for percent width of assembly.png in pdf
       if args.width_assembly_png and 1 <= int(args.width_assembly_png) <= 100:
         data['width_assembly_png'] = args.width_assembly_png
@@ -1768,7 +1768,7 @@ if __name__ == '__main__':
       else:
         #print "Arg for width of schematic.png in PDF not valid or not given. Using 50%."
         data['width_schematic_png'] = kfconfig.default_schematic_image_width
-        
+
       # accept user input for percent width of all other .png in pdf
       if args.width_other_png and int(args.width_other_png) in range (1,100):
         data['width_other_png'] = args.width_other_png
