@@ -1,0 +1,19 @@
+{
+    "author":"Jenner Hanni",
+    "bom_dir":"bom",
+    "company":"Wickerbox Electronics",
+    "date_create":"15 May 2018",
+    "date_update":"15 May 2018",
+    "description":"test board",
+    "email":"jenner@wickerbox.net",
+    "gerbers_dir":"gerbers",
+    "lib_dir":"/home/wicker/wickerlib/libraries",
+    "license":"CERN Open Hardware License v1.2",
+    "projname":"testboard",
+    "template_dir":"/home/wicker/wickerlib-private/templates",
+    "template_kicad":"wickerbox-2layer",
+    "template_latex":"wickerbox.tex",
+    "title":"Test Board",
+    "version":"1.2",
+    "website":"http://wickerbox.net"
+}

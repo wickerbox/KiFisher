@@ -1,0 +1,3 @@
+Ref,Qty1,Qty3,Footprint,Footprint Library,Symbol,Symbol Library,Datasheet,MF_Name,MF_PN,S1_Name,S1_PN,Type
+LED1,1,3,LED-1206-SMD,Wickerlib,LED-BLUE-1206-SMT-150120BS75000,wickerlib,http://katalog.we-online.de/led/datasheet/150120VS75000.pdf,Wurth,150120BS75000,Digikey,732-4989-1-ND,
+R1,1,3,RLC-0603-SMD,Wickerlib,RES-470-5%-1/4W-0603,wickerlib,http://rohmfs.rohm.com/en/products/databook/datasheet/passive/resistor/chip_resistor/esr.pdf,Rohm Semi,ESR03EZPJ471,Digikey,RHM470DCT-ND,
