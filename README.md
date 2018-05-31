@@ -1,7 +1,7 @@
 # KiFisher
 Automating project documentation for KiCad
 
-This project is not yet live!
+**This project is not yet live!**
 
 ### Usage
 
