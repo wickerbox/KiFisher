@@ -43,11 +43,12 @@ class XYRSPart():
   mpn = ''       # manufacturers part number
 
   def print_part(self):
-    print ''
+    print('')
 
 class Comp():
   ref = ''          # ex: C1 -- this is required
-  value = ''        # ex: CAP CER 1uF X7R 0402
+  value = ''        # ex: 1uF 20V
+  description = ''  # ex: CAP CER 1uF X7R 0402
   footprint = ''    # ex: RLC-0402-SMD
   fp_lib = ''       # ex: Wickerlib
   symbol = ''       # ex: CAP-CER-1UF-X7R-0402
@@ -58,8 +59,8 @@ class Comp():
   s1_name = ''      # ex: Digikey
   s1_pn = ''        # ex: 10281-ND
   thsmt = ''        # 'th', 'smt', or 'dnp'
-  xsize = ''        # length of part in mils in x direction
-  ysize = ''        # width of part in mils in y direction
+  xsize_mils = ''   # length of part in mils in x direction
+  ysize_mils = ''   # width of part in mils in y direction
   xloc = ''         # mils from bottom left, ex: 270.00
   yloc = ''         # mils from bottom left, ex: 900.00
   rot = ''          # rotation in degrees, ex: 270
@@ -68,10 +69,17 @@ class Comp():
   def print_component(self):
     print('-------------------------')
     print('Ref:',self.ref,'\t','Value:',self.value)
-    print(self.datasheet)
-    print('Symbol:',self.symbol, 'in' ,self.sym_library)
-    print('Footprint:',self.footprint,'in',self.fp_library)
-
+    print('Datasheet:',self.datasheet)
+    print('Symbol:',self.symbol, 'in' ,self.sym_lib)
+    print('Footprint:',self.footprint,'in',self.fp_lib)
+    print('Description:',self.description)
+    print('Made by',self.mf_name,'with PN:',self.mf_pn)
+    print('Sold by',self.s1_name,'with PN:',self.s1_pn)
+    print('Type:',self.thsmt)
+    print('Size in mils:',self.xsize_mils,'x',self.ysize_mils)
+    print('Location:', self.xloc+'x ',self.yloc+'y')
+    print('Rotation:',self.rot,'on the',self.side,'side')
+    print('')
 
 class BOMline():
   refs = ''
@@ -91,7 +99,7 @@ class BOMline():
   populate = 'Yes'
 
   def print_line(self):
-    print self.refs,self.qty,self.value,self.footprint,self.footprint_lib,self.symbol,self.symbol_lib,self.datasheet,self.description,self.mf_name,self.mf_pn,self.s1_name,self.s1_pn,self.thsmt,self.populate
+    print(self.refs,self.qty,self.value,self.footprint,self.footprint_lib,self.symbol,self.symbol_lib,self.datasheet,self.description,self.mf_name,self.mf_pn,self.s1_name,self.s1_pn,self.thsmt,self.populate)
 
 ###########################################################
 #
@@ -127,8 +135,8 @@ def update_version(name,version):
   # but we need the 'v' prefix for all other operations locally so add it
   data['version'] = 'v'+version
 
-  print "Remember! The README.md does not update version automatically."
-  print "Update it before you generate the PDF!"
+  print("Remember! The README.md does not update version automatically.")
+  print("Update it before you generate the PDF!")
 
   update_kicad_pcb_title_block(data)
   update_sch_title_block(data)
@@ -171,7 +179,7 @@ def create_new_project(projname,which_template,version):
   else:
     which_template = kfconfig.templates_dir+which_template+'.json'
 
-  print which_template
+  print(which_template)
   call(['cp',which_template,projname+'/proj.json'])
 
   # if it exists, load the proj.json file and make updates if necessary
@@ -189,7 +197,7 @@ def create_new_project(projname,which_template,version):
     if not data[item]:
       data[item] = raw_input('%s: ' %item)
     else:
-      print item+': '+data[item]
+      print(item+': '+data[item])
 
   with open(projname+'/proj.json', 'w') as jsonfile:
     json.dump(data, jsonfile, indent=4, sort_keys=True, separators=(',', ':'))
@@ -201,16 +209,16 @@ def create_new_project(projname,which_template,version):
   if os.path.exists(filename) is True:
     s = raw_input("README.md exists. Do you want to overwrite it? Y/N: ")
     if 'Y' in s or 'y' in s:
-      print "great, we'll overwrite."
+      print("great, we'll overwrite.")
     else:
-      print "okay, closing program."
+      print("okay, closing program.")
       exit()
 
   create_readme(filename, data)
 
   # copy over the KiCad template files and fill in values
 
-  print "\ncreating KiCad Project from template", data['template_kicad']
+  print("\ncreating KiCad Project from template", data['template_kicad'])
 
   templatesrc = data['template_dir']+'/'+data['template_kicad']+'/'+data['template_kicad']
   newpath = os.path.join(data['projname'],data['projname'])
@@ -425,7 +433,7 @@ def plot_gerbers_and_drills(projname, plot_dir):
   for f in filelist:
     os.remove(f)
   os.chdir('..')
-  print os.getcwd()
+  print(os.getcwd())
 
   # create board object
   board = LoadBoard(projname+'.kicad_pcb')
@@ -536,7 +544,7 @@ def plot_gerbers_and_drills(projname, plot_dir):
       pctl.OpenPlotfile(lyrname, PLOT_FORMAT_GERBER, "Inner")
       #print 'plot %s' % pctl.GetPlotFileName()
       if pctl.PlotLayer() == False:
-          print "Plot Error: Layer Missing?"
+          print("Plot Error: Layer Missing?")
 
   # close out the plot to safely free the object.
 
@@ -633,11 +641,11 @@ def get_board_size(projname,plot_dir):
 
   width_in = '%.2f' % float(x*0.03937)
   height_in = '%.2f' % float(y*0.03937)
-  print width_in, height_in
+  print(width_in, height_in)
 
   if x is 0 or y is 0:
-    print "This may be a circular board, can't deal with it yet."
-    print "can't continue."
+    print("This may be a circular board, can't deal with it yet.")
+    print("can't continue.")
     exit()
   else:
     dim_ratio = x/y
@@ -761,7 +769,7 @@ def create_assembly_diagrams(projname,plotdir,width,height):
   elif f2 is True:
     call(['mv','assembly-bottom.png','assembly.png'])
   else:
-    print "no assembly diagrams."
+    print ("no assembly diagrams.")
 
 
 ###########################################################
@@ -824,7 +832,7 @@ def create_image_previews(projname,plotdir,width_pixels,height_pixels):
 
   projfile = 'bottom.gvp'
   cwd = os.getcwd()
-  print cwd
+  print(cwd)
 
   with open(plotdir+'/'+projfile,'w') as pf:
     pf.write("(gerbv-file-version! \"2.0A\")\n")
@@ -882,15 +890,15 @@ def create_component_list_from_netlist(data):
 
   netfile_name = data['projname']+'.net'
 
-  components = []
+  components_from_json = []
 
   comp_flag = False
   comp_count = 0
   fields_flag = False
 
   if not os.path.exists(netfile_name):
-    print "\nERROR! Netfile doesn't exist. Did you export it from the schematic?"
-    print "--> Leaving the program without creating bill of materials.\n"
+    print("\nERROR! Netfile doesn't exist. Did you export it from the schematic?")
+    print("--> Leaving the program without creating bill of materials.\n")
     exit()
 
   net_json = []
@@ -910,7 +918,6 @@ def create_component_list_from_netlist(data):
             net_json.append(',\n')
           first_flag = False
           line = line.replace(')','').replace('\n','').replace('(comp (ref ','').lstrip(' ')
-          #net_json.append('     "'+line+'": [\n        {')
           line = '     {\n        "ref":"'+line+'",'
           net_json.append(line)
         if '(value ' in line:
@@ -948,25 +955,55 @@ def create_component_list_from_netlist(data):
       parts_json.write(line+'\n')
 
   if os.path.isfile(net_json_path):
-    print net_json_path
+    print(net_json_path)
     with open(net_json_path) as jfile:
-      components = json.load(jfile)
+      components_from_json = json.load(jfile)
 
   else:
-    print "Something went wrong when converting the netlist to a json file."
+    print("Something went wrong when converting the netlist to a json file.")
     exit()
 
-  os.remove(net_json_path)
+  #os.remove(net_json_path)
 
-  # if the 'populate' key already exists, leave it in unchanged
-  # if it doesn't exist, create it and default to 'yes' or 1
-  for c in components:
-    populate_flag = False
+  # create components list of Comp() objects
+  components = []
+
+  for c in components_from_json:
+    new_comp = Comp()
     for key, value in c.iteritems():
-      if key == 'populate':
-        populate_flag = True
-    if populate_flag is False:
-      c['populate'] = 'Yes'
+      if key == 'ref':
+        new_comp.ref = c['ref']
+      if key == 'value':
+        new_comp.value = c['value']
+      if key == 'footprint_lib':
+        new_comp.fp_lib = c['footprint_lib']
+      if key == 'footprint':
+        new_comp.footprint = c['footprint']
+      if key == 'symbol_lib':
+        new_comp.sym_lib = c['symbol_lib']
+      if key == 'symbol':
+        new_comp.symbol = c['symbol']
+      if key == 'datasheet':
+        new_comp.datasheet = c['datasheet']
+      if key == 'description':
+        new_comp.description = c['description']
+      if key == 'mf_name':
+        new_comp.mf_name = c['mf_name']
+      if key == 'mf_pn':
+        new_comp.mf_pn = c['mf_pn']
+      if key == 's1_name':
+        new_comp.s1_name = c['s1_name']
+      if key == 's1_pn':
+        new_comp.s1_pn = c['s1_pn']
+      if key == 'type':
+        new_comp.thsmt = c['type']
+      if key == 'xsize_mils':
+        new_comp.xsize_mils = c['xsize_mils']
+      if key == 'ysize_mils':
+        new_comp.ysize_mils = c['ysize_mils']
+
+    new_comp.print_component()
+    components.append(new_comp)
 
   return components
 
@@ -1006,7 +1043,7 @@ def create_bill_of_materials(data):
     os.remove(f)
   os.chdir('..')
 
-  # get the json object of components
+  # get the components list containing Comp() objects
 
   components = create_component_list_from_netlist(data)
 
@@ -1324,7 +1361,7 @@ def create_mfr_zip_files(data):
 
 def create_assembly_files(data,components):
 
-  print "Creating assembly files for PCB+Assembly"
+  print("Creating assembly files for PCB+Assembly")
 
   if not os.path.exists(data['bom_dir']):
     os.makedirs(data['bom_dir'])
@@ -1658,16 +1695,16 @@ if __name__ == '__main__':
 
   if args.new:
     if (args.mfr or args.bom or args.pdf):
-      print "Creating a new project but not performing any other operations."
-      print "Try again without the -n file to create output files."
+      print("Creating a new project but not performing any other operations.")
+      print("Try again without the -n file to create output files.")
     else:
-      print "Creating a new project."
+      print("Creating a new project.")
     if os.path.exists(args.name):
       x = raw_input("This folder exists. Do you want to remove it and start fresh? Y/N: ")
       if 'y' in x or 'Y' in x:
         call(['rm','-rf',args.name])
       else:
-        print "Try again with a different project name. Exiting program."
+        print("Try again with a different project name. Exiting program.")
         exit()
     if args.version:
       version = args.version
@@ -1690,11 +1727,11 @@ if __name__ == '__main__':
         json.dump(data, jsonfile, indent=4, sort_keys=True, separators=(',', ':'))
 
     else:
-      print "This project is missing a proj.json file. Leaving program."
+      print("This project is missing a proj.json file. Leaving program.")
       exit()
 
-    print '\nThis is the',data['title'],'project:\n'
-    print data['description']+'\n'
+    print('\nThis is the',data['title'],'project:\n')
+    print(data['description']+'\n')
 
     # all plotting is done from the same dir as the kicad files
     cwd = os.getcwd()
@@ -1714,29 +1751,29 @@ if __name__ == '__main__':
           os.remove(f)
         os.chdir('..')
 
-      print "Creating the manufacturing file outputs."
+      print("Creating the manufacturing file outputs.")
       plot_gerbers_and_drills(data['projname'],data['gerbers_dir'])
       board_dims = get_board_size(data['projname'],data['gerbers_dir'])
-      print get_board_size_string(board_dims)
+      print(get_board_size_string(board_dims))
 
       create_assembly_diagrams(data['projname'],data['gerbers_dir'],board_dims[4], board_dims[5])
       create_image_previews(data['projname'],data['gerbers_dir'],board_dims[4], board_dims[5])
       create_mfr_zip_files(data)
 
     if args.bom or args.assy:
-      print "Creating the bill of materials, which will update the README."
+      print("Creating the bill of materials, which will update the README.")
       components_raw = create_bill_of_materials(data)
 
     if args.assy:
-      print "Preparing files for assembly quotes. Currently supports:\n"
-      print "  -- MacroFab\n  -- Seeed/Fusion\n  -- Tempo Automation\n  -- Small Batch Assembly\n"
+      print("Preparing files for assembly quotes. Currently supports:\n")
+      print("  -- MacroFab\n  -- Seeed/Fusion\n  -- Tempo Automation\n  -- Small Batch Assembly\n")
 
       # assy should fail if top or bottom .pos doesn't exist
       if not os.path.exists(data['projname']+'-top.pos'):
-        print "Missing top .pos file. Unable to create assembly information."
+        print("Missing top .pos file. Unable to create assembly information.")
         exit()
       if not os.path.exists(data['projname']+'-bottom.pos'):
-        print "Missing bottom .pos file. Unable to create assembly information."
+        print("Missing bottom .pos file. Unable to create assembly information.")
         exit()
 
       # the components_raw list contains each refdes (part) on a separate row
@@ -1747,13 +1784,13 @@ if __name__ == '__main__':
     update_readme(data)
 
     if args.pdf:
-      print "Creating or updating the PDF."
+      print("Creating or updating the PDF.")
 
       # accept user input for percent width of assembly.png in pdf
       if args.width_assembly_png and 1 <= int(args.width_assembly_png) <= 100:
         data['width_assembly_png'] = args.width_assembly_png
       elif 'width_assembly_png' in data and 0 < int(data['width_assembly_png']) <= 100:
-        print "using value from json file"
+        print("using value from json file")
       else:
         #print "Arg for width of assembly.png in PDF not valid or not given. Using 50%."
         data['width_assembly_png'] = kfconfig.default_assembly_image_width
@@ -1762,7 +1799,7 @@ if __name__ == '__main__':
       if args.width_preview_png and int(args.width_preview_png) in range (1,100):
         data['width_preview_png'] = args.width_preview_png
       elif 'width_preview_png' in data and 0 < int(data['width_preview_png']) <= 100:
-        print "using value from json file"
+        print("using value from json file")
       else:
         #print "Arg for width of preview.png in PDF not valid or not given. Using 50%."
         data['width_preview_png'] = kfconfig.default_preview_image_width
@@ -1771,7 +1808,7 @@ if __name__ == '__main__':
       if args.width_schematic_png and int(args.width_schematic_png) in range (1,100):
         data['width_schematic_png'] = args.width_schematic_png
       elif 'width_schematic_png' in data and 0 < int(data['width_schematic_png']) <= 100:
-        print "using value from json file"
+        print("using value from json file")
       else:
         #print "Arg for width of schematic.png in PDF not valid or not given. Using 50%."
         data['width_schematic_png'] = kfconfig.default_schematic_image_width
@@ -1780,7 +1817,7 @@ if __name__ == '__main__':
       if args.width_other_png and int(args.width_other_png) in range (1,100):
         data['width_other_png'] = args.width_other_png
       elif 'width_other_png' in data and 0 < int(data['width_other_png']) <= 100:
-        print "using value from json file"
+        print("using value from json file")
       else:
         #print "Arg for width of other .png in PDF not valid or not given. Using 50%."
         data['width_other_png'] = kfconfig.default_other_image_width
@@ -1788,5 +1825,5 @@ if __name__ == '__main__':
       create_pdf(data)
       create_release_zipfile(data)
 
-  print "\nProgram completed running successfully."
+  print("\nProgram completed running successfully.")
   exit()
