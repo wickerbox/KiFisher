@@ -32,19 +32,6 @@ from pcbnew import *
 
 # one component object with all possible attributes
 
-class XYRSPart():
-  ref = ''       # ex: C1
-  thsmt = ''     # part type, '1' for SMD, '2' for PTH
-  xsize = ''     # size of package on x-axis
-  ysize = ''     # size of package on y-axis
-  value = ''     # value of part (part value in wickerlib, no spaces)
-  footprint = '' # footprint name (footprint value in wickerlib, no spaces)
-  pop = ''       # 1 for place (default), 0 for do not place
-  mpn = ''       # manufacturers part number
-
-  def print_part(self):
-    print('')
-
 class Comp():
   ref = ''          # ex: C1 -- this is required
   value = ''        # ex: 1uF 20V
@@ -1268,6 +1255,10 @@ def create_mfr_zip_files(data):
 
   if os.path.exists(data['gerbers_dir']):
     os.chdir(data['gerbers_dir'])
+
+  # make a copy for the board file required for macrofab
+  call(['cp',data['projname']+'-Edge.Cuts.gko',data['projname']+'-Edge.Cuts.bor'])
+
   ZipFile = zipfile.ZipFile(data['projname']+'-v'+data['version']+"-gerbers.zip", "w")
   for f in files:
     ZipFile.write(os.path.basename(f))
@@ -1275,7 +1266,6 @@ def create_mfr_zip_files(data):
 
   # Create zip file for stencils
   # always using .gko (outline) and .gtp,.gbp (paste) files
-
   files = []
 
   for ext in ('*.gko','*.gtp'):
@@ -1297,17 +1287,12 @@ def create_mfr_zip_files(data):
 #
 # what it does:
 # - removes all existing assembly files in that directory
+# - updates the components list with x/y pos, rot, size
 # -
-#
-# - create the master BOM object made up of BOM lines
-# - create a master CSV file with all possible info
-# - create a CSV file in the Seeed format
-# - create CSV files for each vendor
-# - create one Markdown file with tables
 #
 ###########################################################
 
-def create_assembly_files(data,components):
+def create_assembly_files(data, components):
 
   print("Creating assembly files for PCB+Assembly")
 
@@ -1319,47 +1304,23 @@ def create_assembly_files(data,components):
   xyrs_parts_master = []
 
   # create xyrs_parts_master from the position files
-
   for pf in posfiles:
     with open(pf) as p:
       for line in p:
         if '#' not in line:
-          line = line.strip('\n').split('  ')
+          # clean the line
+          line = line.strip('\n').split(' ')
           line = [x for x in line if x]
-          #print line
-          xyrs_part = XYRSPart()
-          xyrs_part.ref = line[0].lstrip(' ')
-          xyrs_part.value = line[1].lstrip(' ')
-          xyrs_part.footprint = line[2].lstrip(' ')
-          xyrs_part.xloc = line[3].lstrip(' ')
-          xyrs_part.yloc = line[4].lstrip(' ')
-          xyrs_part.rot = line[5].lstrip(' ')
-          xyrs_part.side = line[6].lstrip(' ')
-          xyrs_part.xsize = ''
-          xyrs_part.ysize = ''
-          xyrs_part.thsmt = ''
-          xyrs_part.pop = '1'
-          xyrs_part.mpn = ''
-          xyrs_parts_master.append(xyrs_part)
 
-  # look for that particular refdes in a line in the components list
-  # fill in missing fields in XYRS component object in xyrs_parts_master
-  # print and verify that list
+          for c in components:
+            if c.ref == line[0]:
+              c.xloc = str(float(line[3])*1000)
+              c.yloc = str(float(line[4])*1000)
+              c.rot = '{:.2f}'.format(float(line[5]))
+              c.side = line[6]
 
-  for x in xyrs_parts_master:
-    for c in components:
-      if c['ref'] == x.ref and c['populate'] == 'Yes':
-        x.xsize = c['xsizemils']
-        x.ysize = c['ysizemils']
-        x.thsmt = c['type']
-        x.value = c['description']
-        x.mpn = c['mf_pn']
-        x.pop = 'Yes'
-
-    if x.thsmt == 'TH':
-      x.thsmt = '2'
-    if x.thsmt == 'SMT' or x.thsmt == 'SMD':
-      x.thsmt = '1'
+#  for c in components:
+#    c.print_component()
 
   # create macrofab's xyrs file
   # only parts to be populated will be included
@@ -1368,24 +1329,51 @@ def create_assembly_files(data,components):
 
   with open(assy_outfile_xyrs,'w') as oxyrs:
     oxyrs.write('#Designator\tX-Loc\tY-Loc\tRotation\tSide\tType\tX-Size\tY-Size\
-                \tValue\tFootprint\tMPN\n')
+                \tValue\tFootprint\tPopulate\tMPN\n')
 
-    for x in xyrs_parts_master:
-      if x.pop == 'Yes':
+    for x in components:
+      if x.thsmt == 'th' or x.thsmt == 'smt':
         oxyrs.write(x.ref)
         oxyrs.write('\t'+x.xloc) if x.xloc else oxyrs.write('\t')
         oxyrs.write('\t'+x.yloc) if x.yloc else oxyrs.write('\t')
         oxyrs.write('\t'+x.rot) if x.rot else oxyrs.write('\t')
         oxyrs.write('\t'+x.side) if x.side else oxyrs.write('\t')
-        oxyrs.write('\t'+x.thsmt) if x.thsmt else oxyrs.write('\t')
-        oxyrs.write('\t'+x.xsize) if x.xsize else oxyrs.write('\t')
-        oxyrs.write('\t'+x.ysize) if x.ysize else oxyrs.write('\t')
+        if x.thsmt == 'th':
+          oxyrs.write('\t'+'2')
+        elif x.thsmt == 'smt':
+          oxyrs.write('\t'+'1')
+        else:
+          oxyrs.write('\t')
+        oxyrs.write('\t'+x.xsize_mils) if x.xsize_mils else oxyrs.write('\t')
+        oxyrs.write('\t'+x.ysize_mils) if x.ysize_mils else oxyrs.write('\t')
         oxyrs.write('\t'+x.value) if x.value else oxyrs.write('\t')
         oxyrs.write('\t'+x.footprint) if x.footprint else oxyrs.write('\t')
         oxyrs.write('\t1')
-        oxyrs.write('\t'+x.mpn) if x.mpn else oxyrs.write('\t\t')
+        oxyrs.write('\t'+x.mf_pn) if x.mf_pn else oxyrs.write('\t\t')
         oxyrs.write('\n')
 
+
+  macrofab_zip = zipfile.ZipFile(data['projname']+'-v'+data['version']+'-macrofab.zip','w')
+
+  if os.path.exists(data['bom_dir']):
+    os.chdir(data['bom_dir'])
+    if os.path.exists(data['projname']+'-v'+data['version']+'-assy.xyrs'):
+      macrofab_zip.write(data['projname']+'-v'+data['version']+'-assy.xyrs')
+    os.chdir('..')
+
+  files = []
+  for ext in ('*.xln','*.gbl','*.gtl','*.gbo','*.gto','*.gbs',
+              '*.gts','*.gbr','*.bor','*.gtp','*.gbp',):
+    files.extend(glob.glob(os.path.join(data['gerbers_dir'], ext)))
+
+  if os.path.exists(data['gerbers_dir']):
+    os.chdir(data['gerbers_dir'])
+
+  for f in files:
+    macrofab_zip.write(os.path.basename(f))
+  os.chdir("..")
+
+  call(['mv',data['projname']+'-v'+data['version']+'-macrofab.zip','bom/'])
 
 ###########################################################
 #
@@ -1567,6 +1555,16 @@ def create_pdf(data):
   # create PDF
   call(['pandoc','-fmarkdown-implicit_figures','-R','--data-dir='+latex_template_dir,'--template='+data['template_latex'],'-V','geometry:margin=1in',tempfile,'-o',data['projname']+'-v'+data['version']+'.pdf'])
 
+  # if it exists, append the schematic to the end of the PDF
+  if os.path.exists(data['projname']+'-v'+data['version']+'-schematic.pdf'):
+    call(['pdfunite',data['projname']+'-v'+data['version']+'.pdf',
+      data['projname']+'-v'+data['version']+'-schematic.pdf',
+      data['projname']+'-v'+data['version']+'-temp.pdf'])
+
+  call(['mv',data['projname']+'-v'+data['version']+'-temp.pdf',
+    data['projname']+'-v'+data['version']+'.pdf'])
+
+
   # remove input file
   call(['rm',tempfile])
 
@@ -1596,6 +1594,8 @@ def create_release_zipfile(data):
     os.chdir(data['bom_dir'])
     if os.path.exists(data['projname']+'-v'+data['version']+'-bom-readable.csv'):
       release_zip.write(data['projname']+'-v'+data['version']+'-bom-readable.csv')
+    if os.path.exists(data['projname']+'-v'+data['version']+'-macrofab.zip'):
+      release_zip.write(data['projname']+'-v'+data['version']+'-macrofab.zip')
     os.chdir('..')
 
   if os.path.exists(data['gerbers_dir']):
