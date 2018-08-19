@@ -270,7 +270,7 @@ def update_kicad_pcb_title_block(data):
 # - data object
 #
 # what it does:
-# - reads in the existing file
+# - reads in the existing .sch files
 # - applies the current data to the entire title block
 # - writes the file back out
 #
@@ -280,34 +280,36 @@ def update_kicad_pcb_title_block(data):
 
 def update_sch_title_block(data):
 
-  f = data['projname']+'/'+data['projname']+'.sch'
-  f_temp = []
-  title_flag = False
+  filelist = glob.glob(data['projname']+'/*.sch')
 
-  with open(f,'r') as fixfile:
-    for line in fixfile:
+  for f in filelist:
+    f_temp = []
+    title_flag = False
 
-      if 'Title ""' in line:
-        title_flag = True
-      if title_flag is True:
-        if '$EndDescr' in line:
-          title_flag = False
+    with open(f,'r') as fixfile:
+      for line in fixfile:
 
-          f_temp.append('Title "'+data['title']+'"\n')
-          f_temp.append('Date "'+data['date_create']+'"\n')
-          f_temp.append('Rev "'+data['version']+'"\n')
-          f_temp.append('Comp "'+data['license']+'"\n')
-          f_temp.append('Comment1 "'+data['email']+'"\n')
-          f_temp.append('Comment2 "'+data['website']+'"\n')
-          f_temp.append('Comment3 "'+data['company']+'"\n')
-          f_temp.append('Comment4 ""\n')
-          f_temp.append('$EndDescr\n')
-      else:
-        f_temp.append(line)
+        if 'Title ' in line:
+          title_flag = True
+        if title_flag is True:
+          if '$EndDescr' in line:
+            title_flag = False
 
-  with open(f,'w') as fixfile:
-    for line in f_temp:
-      fixfile.write(line)
+            f_temp.append('Title "'+data['title']+'"\n')
+            f_temp.append('Date "'+data['date_create']+'"\n')
+            f_temp.append('Rev "'+data['version']+'"\n')
+            f_temp.append('Comp "'+data['license']+'"\n')
+            f_temp.append('Comment1 "'+data['email']+'"\n')
+            f_temp.append('Comment2 "'+data['website']+'"\n')
+            f_temp.append('Comment3 "'+data['company']+'"\n')
+            f_temp.append('Comment4 ""\n')
+            f_temp.append('$EndDescr\n')
+        else:
+          f_temp.append(line)
+
+    with open(f,'w') as fixfile:
+      for line in f_temp:
+        fixfile.write(line)
 
 ###########################################################
 #
