@@ -30,12 +30,10 @@ from pcbnew import *
 # see MacroFab XYRS formatting here:
 # https://macrofab.com/help/creating-managing-ordering-pcbs/required-design-files/
 
+# one component object with all possible attributes
+
 class XYRSPart():
   ref = ''       # ex: C1
-  xloc = ''      # mils from bottom left, ex: 270.00
-  yloc = ''      # mils from bottom left, ex: 900.00
-  rot = ''       # rotation in degrees, ex: 270
-  side = ''      # layer part is on, 'top' or 'bottom'
   thsmt = ''     # part type, '1' for SMD, '2' for PTH
   xsize = ''     # size of package on x-axis
   ysize = ''     # size of package on y-axis
@@ -45,26 +43,35 @@ class XYRSPart():
   mpn = ''       # manufacturers part number
 
   def print_part(self):
-    print 'Ref: '+self.ref+'\n'+'Xloc: '+self.xloc+'\n'+'Yloc: '+self.yloc+'\n'+'Rot: '+self.rot+'\n'+'Side: '+self.side+'\n'+'Type: '+self.thsmt+'\n'+'XSize: '+self.xsize+'\n'+'YSize'+self.ysize+'\n'+'Value: '+self.value+'\n'+'Footprint: '+self.footprint+'\n'+'Pop: '+self.pop+'\n'+'MPN: '+self.mpn+'\n'
+    print ''
 
 class Comp():
-  ref = ''
-  value = ''
-  footprint = ''
-  fp_library = ''
-  symbol = ''
-  sym_library = ''
-  datasheet = ''
-  fields = [('','')]
+  ref = ''          # ex: C1 -- this is required
+  value = ''        # ex: CAP CER 1uF X7R 0402
+  footprint = ''    # ex: RLC-0402-SMD
+  fp_lib = ''       # ex: Wickerlib
+  symbol = ''       # ex: CAP-CER-1UF-X7R-0402
+  sym_lib = ''      # ex: wickerlib
+  datasheet = ''    # ex: http://iamadatasheet.digikey.com/part.pdf
+  mf_name = ''      # ex: Bourns
+  mf_pn = ''        # ex: ERJFO-1921-CP
+  s1_name = ''      # ex: Digikey
+  s1_pn = ''        # ex: 10281-ND
+  thsmt = ''        # 'th', 'smt', or 'dnp'
+  xsize = ''        # length of part in mils in x direction
+  ysize = ''        # width of part in mils in y direction
+  xloc = ''         # mils from bottom left, ex: 270.00
+  yloc = ''         # mils from bottom left, ex: 900.00
+  rot = ''          # rotation in degrees, ex: 270
+  side = ''         # layer part is on, 'top' or 'bottom'
 
   def print_component(self):
-    print '-------------------------'
-    print 'Ref:',self.ref,'\t','Value:',self.value
-    print self.datasheet
-    print 'Symbol:',self.symbol, 'in' ,self.sym_library
-    print 'Footprint:',self.footprint,'in',self.fp_library
-    for f in self.fields:
-      print f[0],f[1]
+    print('-------------------------')
+    print('Ref:',self.ref,'\t','Value:',self.value)
+    print(self.datasheet)
+    print('Symbol:',self.symbol, 'in' ,self.sym_library)
+    print('Footprint:',self.footprint,'in',self.fp_library)
+
 
 class BOMline():
   refs = ''
