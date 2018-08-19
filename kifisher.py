@@ -84,11 +84,10 @@ class Comp():
 class BOMline():
   refs = ''
   qty = 0
-  value = ''
   footprint = ''
-  footprint_lib = ''
+  fp_lib = ''
   symbol = ''
-  symbol_lib = ''
+  sym_lib = ''
   datasheet = ''
   description = ''
   mf_pn = ''
@@ -96,10 +95,9 @@ class BOMline():
   s1_pn = ''
   s1_name = ''
   thsmt = ''
-  populate = 'Yes'
 
   def print_line(self):
-    print(self.refs,self.qty,self.value,self.footprint,self.footprint_lib,self.symbol,self.symbol_lib,self.datasheet,self.description,self.mf_name,self.mf_pn,self.s1_name,self.s1_pn,self.thsmt,self.populate)
+    print(self.refs,self.qty,self.footprint,self.fp_lib,self.symbol,self.sym_lib,self.datasheet,self.description,self.mf_name,self.mf_pn,self.s1_name,self.s1_pn,self.thsmt)
 
 ###########################################################
 #
@@ -963,7 +961,7 @@ def create_component_list_from_netlist(data):
     print("Something went wrong when converting the netlist to a json file.")
     exit()
 
-  #os.remove(net_json_path)
+  os.remove(net_json_path)
 
   # create components list of Comp() objects
   components = []
@@ -1002,7 +1000,7 @@ def create_component_list_from_netlist(data):
       if key == 'ysize_mils':
         new_comp.ysize_mils = c['ysize_mils']
 
-    new_comp.print_component()
+    #new_comp.print_component()
     components.append(new_comp)
 
   return components
@@ -1044,92 +1042,64 @@ def create_bill_of_materials(data):
   os.chdir('..')
 
   # get the components list containing Comp() objects
-
   components = create_component_list_from_netlist(data)
 
+  # create output file paths
   bom_dir_base_path = data['bom_dir']+'/'+data['projname']+'-v'+data['version']
 
   bom_outfile_csv          = bom_dir_base_path+'-bom-master.csv'
-  bom_outfile_seeed_csv    = bom_dir_base_path+'-bom-seeed.csv'
   bom_outfile_readable_csv = bom_dir_base_path+'-bom-readable.csv'
-  bom_outfile_tempo_csv    = bom_dir_base_path+'-bom-tempo.csv'
+  bom_outfile_seeed_csv    = bom_dir_base_path+'-bom-seeed.csv'
   bom_outfile_md           = bom_dir_base_path+'-bom-readme.md'
 
-  optional_fields = []
   bom = []
 
-  # figure out what vendors are necessary
-
+  # figure out which vendors to create BOMs for
   vendors = []
   for c in components:
-    for key, value in c.iteritems():
-      if key == 's1_name':
-        vendors.append(value)
+    if c.s1_name is not '':
+      vendors.append(c.s1_name)
+
   vendors = set(vendors)
 
   # create the master BOM object
-
   bom = []
 
+  # create all the lines of the BOM
   for c in components:
 
     bomline = BOMline()
 
-    # handle parts of the same type
-    # all items will have a refdes
+    # only proceed of this component is to be placed
+    if 'th' in c.thsmt or 'smt' in c.thsmt:
 
-    exists_flag = False
+      # handle parts of the same type
+      # all items will have a ref (ex: C1)
+      exists_flag = False
+      if bom:
+        for line in bom:
+          if line.symbol == c.symbol:
+            line.qty = line.qty + 1
+            line.refs = line.refs + ' ' + c.ref
+            exists_flag = True
 
-    if bom:
-      for line in bom:
-        if line.symbol == c['symbol']:
-          line.qty = line.qty + 1
-          line.refs = line.refs + ' ' + c['ref']
-          exists_flag = True
-
-    # if this is not a duplicate entry
-    # create a new row for it
-
-    if exists_flag is False:
-      for key, value in c.iteritems():
+      # if this is not a duplicate entry
+      # create a new row for it
+      if exists_flag is False:
         bomline.qty = 1
-        if key == 'ref':
-          bomline.refs = c['ref']
-        if key == 'footprint_lib':
-          bomline.footprint_lib = c['footprint_lib']
-        if key == 'symbol_lib':
-          bomline.symbol_lib = c['symbol_lib']
-        if key == 'footprint':
-          bomline.footprint = c['footprint']
-        if key == 'symbol':
-          bomline.symbol = c['symbol']
-        if key == 'datasheet':
-          bomline.datasheet = c['datasheet']
-        if key == 'description':
-          bomline.description = c['description']
-        if key == 'mf_name':
-          bomline.mf_name = c['mf_name']
-        if key == 'mf_pn':
-          bomline.mf_pn = c['mf_pn']
-        if key == 's1_name':
-          bomline.s1_name = c['s1_name']
-        if key == 's1_pn':
-          bomline.s1_pn = c['s1_pn']
-        if key == 'type':
-          bomline.thsmt = c['type']
-        if key == 'populate':
-          bomline.populate = c['populate']
-        if key == 'xsizemils':
-          bomline.xsizemils = c['xsizemils']
-        if key == 'ysizemils':
-          bomline.ysizemils = c['ysizemils']
-
-      bom.append(bomline)
-
-  # update quantities to account for whether to populate
-  for line in bom:
-    if 'No' in line.populate:
-      line.qty = 0
+        bomline.refs = c.ref
+        bomline.footprint_lib = c.fp_lib
+        bomline.symbol_lib = c.sym_lib
+        bomline.footprint = c.footprint
+        bomline.symbol = c.symbol
+        bomline.datasheet = c.datasheet
+        bomline.description = c.description
+        bomline.mf_name = c.mf_name
+        bomline.mf_pn = c.mf_pn
+        bomline.s1_name = c.s1_name
+        bomline.s1_pn = c.s1_pn
+        bomline.thsmt = c.thsmt
+        bom.append(bomline)
 
   # sort bom ref entries by alphabet
   # ex: C1 C2 C5 instead of C2 C5 C1
@@ -1153,12 +1123,10 @@ def create_bill_of_materials(data):
 
   # create master output string including the dynamic fields
   # this is brute force for now
-
   title_string = 'Ref,Qty1,Qty3,Footprint,Footprint Library,Symbol,Symbol Library,Datasheet'
   title_string += ',MF_Name,MF_PN,S1_Name,S1_PN,Type\n'
 
   # write to the master output file
-
   outfile = bom_outfile_csv
 
   with open(outfile,'w') as obom:
@@ -1166,8 +1134,8 @@ def create_bill_of_materials(data):
     for b in bom:
 
       q = b.qty*3
-      obom.write(b.refs+','+str(b.qty)+','+str(q)+','+b.footprint+','+b.footprint_lib+','+ \
-                 b.symbol+','+b.symbol_lib+','+b.datasheet)
+      obom.write(b.refs+','+str(b.qty)+','+str(q)+','+b.footprint+','+b.fp_lib+','+ \
+                 b.symbol+','+b.sym_lib+','+b.datasheet)
       obom.write(','+b.mf_name) if b.mf_name else obom.write(',')
       obom.write(','+b.mf_pn) if b.mf_pn else obom.write(',')
       obom.write(','+b.s1_name) if b.s1_name else obom.write(',')
@@ -1176,17 +1144,11 @@ def create_bill_of_materials(data):
       obom.write('\n')
 
   # Create the master readable output
-
   outfile = bom_outfile_readable_csv
 
   with open(outfile,'w') as obom:
     obom.write('Ref,Qty,Qty3,Description,MF,MF_PN,S1,S1_PN,Type\n')
     for b in bom:
-      bf_desc = ''
-      bf_mf_name = ''
-      bf_mf_pn = ''
-      bf_s1_name = ''
-      bf_s1_pn = ''
 
       q = b.qty*3
       obom.write(b.refs+',')
@@ -1198,25 +1160,6 @@ def create_bill_of_materials(data):
       obom.write(','+b.s1_pn) if b.s1_pn else obom.write(',')
       obom.write(','+b.thsmt) if b.thsmt else obom.write(',')
       obom.write('\n')
-
-  # Create the tempo automation output
-
-  outfile = bom_outfile_tempo_csv
-
-  with open(outfile,'w') as obom:
-    obom.write('Refdes,Quantity,Description,Manufacturer,MPN\n')
-    for b in bom:
-      if b.qty > 0:
-        bf_desc = ''
-        bf_mf_name = ''
-        bf_mf_pn = ''
-
-        obom.write(b.refs+',')
-        obom.write(str(b.qty)+','+b.description)
-
-        obom.write(','+b.mf_name) if b.mf_name else obom.write(',')
-        obom.write(','+b.mf_pn) if b.mf_pn else obom.write(',')
-        obom.write('\n')
 
   # Create the master Seeed output
 
@@ -1283,14 +1226,19 @@ def create_bill_of_materials(data):
   outassy_list.append('Individual Placements per board: '+str(part_count)+'\n')
   outassy_list.append('Number of Parts: '+str(place_count)+'\n')
 
-  board_dims = get_board_size(data['projname'],data['gerbers_dir'])
-  outassy_list.append(get_board_size_string(board_dims)+'\n')
+#  don't use this here, it requires the manufacturing section to be run
+#  board_dims = get_board_size(data['projname'],data['gerbers_dir'])
+#  outassy_list.append(get_board_size_string(board_dims)+'\n')
 
   # write to the readable markdown file that will end up
   # appended in the github repo README.md
   with open(assy_outfile_md,'w') as oassy:
     for line in outassy_list:
       oassy.write(line+'\n')
+
+  #for line in bom:
+  #  line.print_line()
+  #exit()
 
   # return the json components data object
   return components
