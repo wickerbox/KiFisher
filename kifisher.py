@@ -1307,36 +1307,54 @@ def create_bill_of_materials(data):
 
 def create_mfr_zip_files(data):
 
+  # Work entirely inside the mfr sub_dir
+  if os.path.exists(data['gerbers_dir']):
+    os.chdir(data['gerbers_dir'])
+
+  # Remove empty stencil files
+  files = []
+  for ext in ('*.gtp','*.gbp'):
+    files.extend(glob.glob(ext))
+
+  for stencilfile_path in files:
+    stencilfile_lines = []
+    with open(stencilfile_path) as f:
+      for line in f:
+        stencilfile_lines.append(line)
+    if stencilfile_lines[13] == 'G04 APERTURE END LIST*\n':
+      call(['rm',stencilfile_path])
+
   # Create zip file for OSH Park and generic manufacturing
 
   files = []
 
   for ext in ('*.xln','*.gbl','*.gtl','*.gbo','*.gto','*.gbs',
               '*.gts','*.gbr','*.gko','*.gtp','*.gbp',):
-    files.extend(glob.glob(os.path.join(data['gerbers_dir'], ext)))
+    files.extend(glob.glob(ext))
 
-  if os.path.exists(data['gerbers_dir']):
-    os.chdir(data['gerbers_dir'])
-
-  # make a copy for the board file required for macrofab
+  # Make a copy for the board file required for macrofab
   call(['cp',data['projname']+'-Edge.Cuts.gko',data['projname']+'-Edge.Cuts.bor'])
 
   ZipFile = zipfile.ZipFile(data['projname']+'-v'+data['version']+"-gerbers.zip", "w")
   for f in files:
     ZipFile.write(os.path.basename(f))
-  os.chdir("..")
 
   # Create zip file for stencils
   # always using .gko (outline) and .gtp,.gbp (paste) files
+  # but only if .gtp or .gbp exist
   files = []
 
-  for ext in ('*.gko','*.gtp'):
-    files.extend(glob.glob(os.path.join(data['gerbers_dir'], ext)))
+  for ext in ('*.gtp','*.gbp'):
+    files.extend(glob.glob(ext))
 
-  os.chdir(data['gerbers_dir'])
-  ZipFile = zipfile.ZipFile(data['projname']+'-v'+data['version']+"-stencil.zip", "w")
-  for f in files:
-    ZipFile.write(os.path.basename(f))
+  if files:
+    files.extend(glob.glob('*.gko'))
+    ZipFile = zipfile.ZipFile(data['projname']+'-v'+data['version']+"-stencil.zip", "w")
+    for f in files:
+      ZipFile.write(os.path.basename(f))
+  else:
+    print('There are no stencil files! Are all components through-hole?')
+
   os.chdir("..")
 
 ###########################################################
