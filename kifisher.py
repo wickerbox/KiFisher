@@ -1090,17 +1090,76 @@ def create_bill_of_materials(data):
         bomline.thsmt = c.thsmt
         bom.append(bomline)
 
-  # sort bom ref entries by alphabet
-  # ex: C1 C2 C5 instead of C2 C5 C1
   for b in bom:
-    refs = b.refs.split(' ')
-    refs.sort(key=lambda x: x)
-    b.refs = ''
-    for r in refs:
-      if b.refs:
-        b.refs = b.refs + ' ' + r
-      else:
-        b.refs = r
+
+    refs_str = b.refs
+    if 'UA1' in b.refs:
+      out_str = 'UA1-UF1'
+    else:
+      # get leading chars (could be J, could be LCD)
+      match = re.match(r"([a-z]+)([0-9]+)", refs_str, re.I)
+      if match:
+        items = match.groups()
+      lead_str = items[0]
+
+      # strip out the chars, sort
+      refs_str = refs_str.replace(lead_str,'').split(' ')
+      refs_str.sort(key=int)
+
+      # create a list of integers to make math easier
+      refs_str_ints = []
+      for num in refs_str:
+        refs_str_ints.append(int(num))
+
+      # create a styled list of integer sequences
+      out_str_list = []
+      out_str = ''
+      prev_num = refs_str_ints[0]
+      seq_start = refs_str_ints[0]
+      last_num_in_list = refs_str_ints[-1]
+
+      for num in refs_str_ints:
+
+        # if there's a gap between us and previous
+        # add it and any possible sequence to the list
+        if num != refs_str_ints[0] and num - prev_num != 1:
+
+          # it was a standalone number
+          if seq_start == prev_num:
+            out_str = str(seq_start)
+
+          # it was the end of a sequence
+          else:
+            out_str = str(seq_start) + '-' + str(prev_num)
+          out_str_list.append(out_str)
+          seq_start = num
+
+        # if this is the last number
+        # add it and any possible sequence to the list
+        if num == last_num_in_list:
+
+          # the last number was a standalone number
+          if seq_start == num:
+            out_str = str(seq_start)
+
+          # the last number was the end of a sequence
+          else:
+            out_str = str(seq_start) + '-' + str(num)
+          out_str_list.append(out_str)
+
+        # in any case, track the previous number
+        prev_num = num
+
+      # add the leading chars back in
+      result = []
+      for num in out_str_list:
+        result.append(lead_str + num)
+
+      # create the final output string
+      out_str = ' '.join(result)
+
+    b.refs = out_str
+    print(out_str)
 
   # sort bom list by ref
   # ex: C1 C2 ~~~~
