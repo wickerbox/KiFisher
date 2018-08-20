@@ -1047,7 +1047,8 @@ def create_bill_of_materials(data):
   vendors = []
   for c in components:
     if c.s1_name is not '':
-      vendors.append(c.s1_name)
+      if c.thsmt == 'th' or c.thsmt == 'smt' or c.thsmt == 'dnp':
+        vendors.append(c.s1_name)
 
   vendors = set(vendors)
 
@@ -1060,7 +1061,7 @@ def create_bill_of_materials(data):
     bomline = BOMline()
 
     # only proceed of this component is to be placed
-    if 'th' in c.thsmt or 'smt' in c.thsmt:
+    if 'th' in c.thsmt or 'smt' in c.thsmt or 'dnp' in c.thsmt:
 
       # handle parts of the same type
       # all items will have a ref (ex: C1)
