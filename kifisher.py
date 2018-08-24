@@ -1502,7 +1502,7 @@ def update_readme(data):
               tempfile.append(line)
               if '<!--- bom start' in line:
                 write_bom = True
-                tempfile.append("### Bill of Materials\n\n")
+                tempfile.append("## Bill of Materials\n\n")
                 for bomline in newlines:
                   tempfile.append(bomline)
             else:
@@ -1537,7 +1537,7 @@ def update_readme(data):
               tempfile.append(line)
               if '<!--- assy start' in line:
                 write_assy = True
-                tempfile.append("### Assembly Info for Quoting\n\n")
+                tempfile.append("\n### Assembly Info for Quoting\n\n")
                 for assyline in newlines:
                   tempfile.append(assyline)
             else:
