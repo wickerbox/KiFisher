@@ -343,7 +343,9 @@ def create_readme(filename,data):
     o.write('Description.\n\n')
     o.write('<!--- bom start --->\n')
     o.write('### Bill of Materials\n\n')
-    o.write('<!--- bom end --->\n')
+    o.write('<!--- bom end --->\n\n')
+    o.write('### Manufacturing Notes\n\n')
+    o.write('This board must be v-scored. Do not panelize with support tabs or mousebites.\n\n')
     o.write('<!--- assy start --->\n')
     o.write('### Assembly Info for Quoting\n\n')
     o.write('<!--- assy end --->\n')
@@ -915,8 +917,10 @@ def create_component_list_from_netlist(data):
         if '(footprint ' in line:
           line = line.replace(')','').replace('\n','').replace('(footprint ','').lstrip(' ')
           splitline = line.split(':')
-          net_json.append('        "footprint_lib":"'+splitline[0]+'",')
-          net_json.append('        "footprint":"'+splitline[1]+'",')
+          if splitline[0]:
+            net_json.append('        "footprint_lib":"'+splitline[0]+'",')
+          if splitline[1]:
+            net_json.append('        "footprint":"'+splitline[1]+'",')
         if '(datasheet ' in line:
           line = line.replace(')','').replace('"','').replace('\n','').replace('(datasheet ','').lstrip(' ')
           net_json.append('        "datasheet":"'+line+'",')
@@ -956,6 +960,7 @@ def create_component_list_from_netlist(data):
   components = []
 
   for c in components_from_json:
+
     new_comp = Comp()
     for key, value in c.iteritems():
       if key == 'ref':
@@ -991,6 +996,8 @@ def create_component_list_from_netlist(data):
 
     #new_comp.print_component()
     components.append(new_comp)
+
+    new_comp.print_component()
 
   return components
 
@@ -1641,8 +1648,8 @@ def create_pdf(data):
       data['projname']+'-v'+data['version']+'-schematic.pdf',
       data['projname']+'-v'+data['version']+'-temp.pdf'])
 
-  call(['mv',data['projname']+'-v'+data['version']+'-temp.pdf',
-    data['projname']+'-v'+data['version']+'.pdf'])
+    call(['mv',data['projname']+'-v'+data['version']+'-temp.pdf',
+      data['projname']+'-v'+data['version']+'.pdf'])
 
 
   # remove input file
